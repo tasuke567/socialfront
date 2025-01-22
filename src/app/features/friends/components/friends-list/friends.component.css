@@ -1,0 +1,117 @@
+.friends-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.spinner-container {
+  text-align: center;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.alert {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.add-friend-section {
+  margin-bottom: 20px;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.friend-input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.add-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.add-btn:disabled {
+  background-color: #d6d6d6;
+  cursor: not-allowed;
+}
+
+.friend-list {
+  margin-top: 20px;
+}
+
+.friends-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.friend-card {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.friend-name {
+  font-weight: bold;
+}
+
+.no-friends-message {
+  text-align: center;
+  color: #666;
+  margin-top: 20px;
+}
+
+.unfriend-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.unfriend-btn:disabled {
+  background-color: #f5c6cb;
+  cursor: not-allowed;
+}
