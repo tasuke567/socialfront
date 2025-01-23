@@ -22,8 +22,8 @@ export class LoginComponent {
     private router: Router
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators['required'], Validators['email']]],
-      password: []
+      email: ['', [Validators.required, Validators.email]], // Corrected validation
+      password: ['', [Validators.required]] // You might want to add a required validator for password
     });
   }
 

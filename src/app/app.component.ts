@@ -10,28 +10,19 @@ import { AuthService } from './services/auth.service';
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, HttpClientModule, ReactiveFormsModule, RouterModule],
-  template: `
-    <nav class="navbar">
-      <a routerLink="/">Home</a>
-      <ng-container *ngIf="isLoggedIn$ | async; else authLinks">
-        <a routerLink="/friends">Friends</a>
-        <button (click)="logout()">Logout</button>
-      </ng-container>
-      <ng-template #authLinks>
-        <a routerLink="/login">Login</a>
-        <a routerLink="/register">Register</a>
-      </ng-template>
-    </nav>
-    <router-outlet></router-outlet>
-  `
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
+
   isLoggedIn$ = this.authService.isLoggedIn$;
+  loggedInUsername: string = '';
 
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
     this.authService.checkAuthStatus();
+    this.loggedInUsername = this.authService.getUsername() || 'Guest';
   }
 
   logout() {

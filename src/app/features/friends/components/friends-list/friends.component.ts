@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { FriendsApiService } from '../../services/friends-api.service';
 import { Friend } from '../../models';
+import { User } from '../../../../shared/models/user.model';
 
 @Component({
   selector: 'app-friends',
@@ -18,6 +19,9 @@ export class FriendsComponent {
   loading: boolean = false;
   errorMessage: string = '';
   successMessage: string = '';
+  searchQuery: string = ''; // คำค้นหา
+  requestedFriends: Set<string> = new Set();
+  searchResults: User[] = [];
 
   constructor(private friendService: FriendsApiService) {}
 
@@ -34,6 +38,10 @@ export class FriendsComponent {
           this.friends = response.friends.filter(
             (friend: Friend) => friend.id !== this.userId
           );
+
+          // Sorting friends by id
+          // Add sorting logic here
+
           this.setLoadingState(false, 'Friends loaded successfully.');
         } else {
           this.friends = [];
@@ -79,6 +87,9 @@ export class FriendsComponent {
     if (!isLoading) {
       this.successMessage = message;
       this.errorMessage = '';
+      setTimeout(() => {
+        this.successMessage = ''; // Clear success message after 3 seconds
+      }, 3000);
     }
   }
 
@@ -90,5 +101,39 @@ export class FriendsComponent {
       (error?.message || error?.error?.message || error);
     this.successMessage = '';
     this.loading = false;
+  }
+  sortFriendsByName(): void {
+    this.friends.sort((a, b) => {
+      if (a.name && b.name) {
+        return a.name.localeCompare(b.name);
+      }
+      return 0; // If name is not defined, don't alter the order
+    });
+  }
+  // เรียงเพื่อนตาม ID
+  // ตรวจสอบให้แน่ใจว่า ID ของเพื่อนเป็นชนิด 'number'
+  sortFriendsById() {
+    // ตรวจสอบว่า id เป็น number ก่อนทำการคำนวณ
+    this.friends.sort((a, b) => {
+      const idA = typeof a.id === 'number' ? a.id : parseInt(a.id, 10);
+      const idB = typeof b.id === 'number' ? b.id : parseInt(b.id, 10);
+
+      return idA - idB;
+    });
+  }
+  // ฟังก์ชันค้นหาเพื่อน
+  searchFriends(query: string ): void {
+    this.friendService.searchUsers(query).subscribe((users) => {
+      this.searchResults = users;
+    });
+  }
+  // Mark a friend request as sent
+  sendFriendRequest(friendId: string) {
+    this.requestedFriends.add(friendId);
+  }
+
+  // Check if a friend request has been sent
+  isRequestSent(friendId: string): boolean {
+    return this.requestedFriends.has(friendId);
   }
 }

@@ -10,6 +10,7 @@ export interface Post {
   content: string;
   createdAt: any; // หรือ Date ถ้าคุณแปลงแล้ว
   updatedAt: any;
+  username: string;
 }
 
 // ฟังก์ชันสำหรับแปลงวันที่

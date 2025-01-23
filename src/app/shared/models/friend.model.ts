@@ -8,4 +8,5 @@ export interface Friend {
     friend?: User;      // The friend user
     createdAt: Date;
     updatedAt: Date;
+    requested?: boolean;
 }

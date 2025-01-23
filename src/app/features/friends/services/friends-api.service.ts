@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse ,HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { User } from '../../../shared/models/user.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FriendsApiService {
-  private apiUrl = 'http://localhost:3000/api/friends';
+  private apiUrl = 'http://localhost:3000/api/friends/';
 
   constructor(private http: HttpClient) {}
 
@@ -32,5 +33,18 @@ export class FriendsApiService {
     return this.http.delete(`${this.apiUrl}/${userId}/unfriend/${friendId}`).pipe(
       catchError(this.handleError)
     );
+  }
+  searchUsers(query: string, page: number = 1, limit: number = 10): Observable<User[]> {
+    const params = new HttpParams()
+      .set('query', query)
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    return this.http.get<User[]>(`${this.apiUrl}/search`, { params });
+  }
+
+  // ส่งคำขอแอดเพื่อน
+  sendFriendRequest(friendId: string): Observable<any> {
+    return this.http.post<any>(`/api/friends/request`, { friendId });
   }
 }

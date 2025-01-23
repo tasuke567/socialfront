@@ -46,4 +46,5 @@ export class PostsService {
   getPostId(post: any): string {
     return post?.id || ''; // ตรวจสอบว่า post object มี id หรือไม่ ถ้าไม่มีจะคืนค่าเป็นค่าว่าง
   }
+  
 }

@@ -1,3 +1,19 @@
-<div>
+<header>
+  <nav class="navbar">
+    <a routerLink="/" class="nav-link">Home</a>
+    <ng-container *ngIf="isLoggedIn$ | async; else authLinks">
+      <a routerLink="/friends" class="nav-link">Friends</a>
+      <button (click)="logout()" class="btn btn-logout">Logout</button>
+    </ng-container>
+    <ng-template #authLinks>
+      <a routerLink="/login" class="nav-link">Login</a>
+      <a routerLink="/register" class="nav-link">Register</a>
+    </ng-template>
+  </nav>
+  <!-- <div *ngIf="loggedInUsername" class="text-gray-500">
+    <p>Logged in as: <strong>{{ loggedInUsername }}</strong></p>
+  </div> -->
+</header>
+<main>
   <router-outlet></router-outlet>
-</div>
+</main>

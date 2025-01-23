@@ -1,4 +1,3 @@
-// app.routes.ts
 import { Routes } from '@angular/router';
 import { authGuard, publicOnlyGuard } from './guards/auth.guard';
 import { LoginComponent } from './components/login/login/login.component';
@@ -14,20 +13,20 @@ export const routes: Routes = [
   { 
     path: 'friends', 
     component: FriendsComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard] // เข้าถึงได้เฉพาะผู้ที่ล็อกอินแล้ว
   },
   { 
     path: 'login', 
     component: LoginComponent,
-    canActivate: [publicOnlyGuard]
+    canActivate: [publicOnlyGuard] // เข้าถึงได้เฉพาะผู้ที่ยังไม่ล็อกอิน
   },
   { 
     path: 'register', 
     component: RegisterComponent,
-    canActivate: [publicOnlyGuard]
+    canActivate: [publicOnlyGuard] // เข้าถึงได้เฉพาะผู้ที่ยังไม่ล็อกอิน
   },
   { 
     path: '**', 
-    redirectTo: '' 
+    redirectTo: '' // เปลี่ยนเส้นทางไป Home หาก URL ไม่ถูกต้อง
   }
 ];
