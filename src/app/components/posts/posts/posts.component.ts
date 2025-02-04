@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { PostsService } from '../../../core/services/posts.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Post } from '../../../utils/date-utils';
+import { Post } from './models/post.model';
 import { formatDistanceToNow } from 'date-fns';
 import { AuthService } from '../../../services/auth.service';
 
@@ -15,25 +15,33 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class PostsComponent {
   posts: Post[] = [];
+  newPostTitle: string = '';
   newPostContent: string = '';
   isLoading: boolean = false;
   isEditing: boolean = false;
   editPostId: string = '';
-  userId: string | null;
-  postId: string | '';
-  editPostContent: string = '';
+  currentUserProfileUrl: string | null = null; 
   showActions: string | null = null;
-  currentUser: any;
+  // currentUser สามารถเป็น string ถ้าเก็บเพียงชื่อผู้ใช้
+  currentUser: string = '';
+  // ตัวแปรสำหรับ feedback message
+  feedbackMessage: string = '';
+  isErrorFeedback: boolean = false;
+  // ตัวแปรสำหรับเก็บโพสต์ที่กำลังแก้ไข (ถ้าต้องการใช้ modal แบบ inline)
+  editingPostContent: string = '';
+
+  userId: string | null;
 
   constructor(
     private postsService: PostsService,
     private authService: AuthService
   ) {
     this.userId = this.authService.getUserId();
-    this.postId = this.postsService.getPostId(this.posts);
-    this.currentUser = this.authService.getCurrentUser();  // ดึงข้อมูลผู้ใช้ที่ล็อกอิน
+    const currentUserData = this.authService.getCurrentUser();
+    // สมมุติว่า currentUserData.username เป็น string
+    this.currentUser = currentUserData.username;
   }
-
+  
   ngOnInit(): void {
     this.fetchPosts();
   }
@@ -42,15 +50,10 @@ export class PostsComponent {
     this.isLoading = true;
     this.postsService.getPosts().subscribe(
       (data: any) => {
-        if (Array.isArray(data.posts)) {
-          this.posts = data.posts.map((post: Post) => {
-            const createdAt = new Date(post.createdAt);
-            return {
-              ...post,
-              createdAt: this.formatRelativeTime(post.createdAt),
-              username: post.username,
-              updatedAt: new Date(post.updatedAt),
-            };
+        if (Array.isArray(data)) {
+          // เรียงโพสต์จากวันที่ใหม่สุดอยู่ด้านบน (หากมีฟิลด์ createdAt ที่ถูกต้อง)
+          this.posts = data.sort((a: any, b: any) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           });
         } else {
           this.posts = [];
@@ -58,59 +61,80 @@ export class PostsComponent {
         this.isLoading = false;
       },
       (error) => {
-        console.error('Error fetching posts:', error);
         this.isLoading = false;
+        this.feedbackMessage = 'Error fetching Data';
+        this.isErrorFeedback = true;
       }
     );
   }
 
   formatRelativeTime(dateObj: any): string {
-    const { year, month, day, hour, minute, second } = dateObj;
-    const date = new Date(
-      year.low,
-      month.low - 1,
-      day.low,
-      hour.low + 7,
-      minute.low,
-      second.low
-    );
+    if (!dateObj) {
+      return 'N/A';
+    }
+    const date = new Date(dateObj);
+    if (isNaN(date.getTime())) {
+      return 'N/A';
+    }
     return formatDistanceToNow(date, { addSuffix: true });
   }
 
   createPost(): void {
     if (!this.newPostContent.trim()) return;
 
-    const newPost = { content: this.newPostContent, userId: this.userId };
+    if (!this.userId || !this.currentUser) {
+      console.error('User not logged in or missing data');
+      this.feedbackMessage = 'User not logged in or missing data';
+      this.isErrorFeedback = true;
+      return;
+    }
+
+    const title = this.newPostTitle.trim() || 'My Post';
+
+    const newPost = {
+      title: title,
+      content: this.newPostContent,
+      userId: Number(this.userId)
+    };
+
     this.postsService.createPost(newPost).subscribe(
       (response: any) => {
-        this.posts.unshift(response.post);
+        console.log('Create Post Response:', response);
+        // สมมุติว่า backend ส่ง response แบบ { post: {...} } หรือส่ง object ของโพสต์โดยตรง
+        const createdPost = response.post || response;
+        if (createdPost) {
+          this.posts.unshift(createdPost);
+          this.feedbackMessage = 'Post created successfully.';
+          this.isErrorFeedback = false;
+        } else {
+          console.error('No post data found in response');
+          this.feedbackMessage = 'Post creation failed.';
+          this.isErrorFeedback = true;
+        }
         this.newPostContent = '';
+        this.newPostTitle = '';
       },
-      (error) => console.error('Error creating post:', error)
+      (error) => {
+        console.error('Error creating post:', error);
+        this.feedbackMessage = 'Error creating post.';
+        this.isErrorFeedback = true;
+      }
     );
   }
 
-  editPost(postId: string, postContent: string) {
+  editPost(postId: string, postContent: string): void {
+    // กำหนดให้แสดงฟอร์มแก้ไขโพสต์ (ใน modal หรือ inline)
     this.editPostId = postId;
-    this.editPostContent = postContent;
+    this.editingPostContent = postContent;
     this.isEditing = true;
   }
 
   savePost(): void {
     if (this.isEditing) {
-      this.updatePost(this.editPostId, this.editPostContent);
+      this.updatePost(this.editPostId, this.editingPostContent);
     } else {
       this.createPost();
     }
-  }
-
-  deletePost(postId: string): void {
-    this.postsService.deletePost(postId).subscribe(
-      () => {
-        this.posts = this.posts.filter((post) => post.id !== postId);
-      },
-      (error) => console.error('Error deleting post:', error)
-    );
   }
 
   updatePost(postId: string, content: string): void {
@@ -123,14 +147,44 @@ export class PostsComponent {
         );
         if (updatedPostIndex !== -1) {
           this.posts[updatedPostIndex].content = response.post.content;
-          this.posts[updatedPostIndex].updatedAt = response.post.updatedAt;
+          // สมมุติว่า backend ส่ง updatedAt ด้วย
+          this.posts[updatedPostIndex].updatedAt = new Date(response.post.updatedAt);
+          this.feedbackMessage = 'Post updated successfully.';
+          this.isErrorFeedback = false;
         }
         this.isEditing = false;
-        this.editPostContent = '';
+        this.editingPostContent = '';
         this.editPostId = '';
       },
       (error) => {
         console.error('Error updating post:', error);
+        this.feedbackMessage = 'Error updating post.';
+        this.isErrorFeedback = true;
+      }
+    );
+  }
+
+  deletePost(postId: string): void {
+    if (!this.userId) {
+      console.error('User not logged in');
+      this.feedbackMessage = 'User not logged in';
+      this.isErrorFeedback = true;
+      return;
+    }
+    // ใช้ confirm dialog เพื่อขอยืนยันการลบโพสต์
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+    this.postsService.deletePost(postId, Number(this.userId)).subscribe(
+      () => {
+        this.posts = this.posts.filter((post) => post.id !== postId);
+        this.feedbackMessage = 'Post deleted successfully.';
+        this.isErrorFeedback = false;
+      },
+      (error) => {
+        console.error('Error deleting post:', error);
+        this.feedbackMessage = 'Error deleting post.';
+        this.isErrorFeedback = true;
       }
     );
   }
@@ -138,5 +192,4 @@ export class PostsComponent {
   toggleActions(postId: string): void {
     this.showActions = this.showActions === postId ? null : postId;
   }
-  
 }

@@ -1,17 +1,4 @@
 // utils/date-utils.ts
-// utils/date-utils.ts
-
-// utils/date-utils.ts
-
-// Interface สำหรับ Post
-export interface Post {
-  id: string;
-  userId: string;
-  content: string;
-  createdAt: any; // หรือ Date ถ้าคุณแปลงแล้ว
-  updatedAt: any;
-  username: string;
-}
 
 // ฟังก์ชันสำหรับแปลงวันที่
 export function formatDate(dateObj: any): string {
