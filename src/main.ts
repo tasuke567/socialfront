@@ -6,12 +6,13 @@ import { routes } from './app/app.routes'; // นำเข้า routes
 import { AuthInterceptor } from './app/interceptors/auth.interceptor';
 
 import { AppComponent } from './app/app.component';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 bootstrapApplication(AppComponent, {
   providers: [
     importProvidersFrom(HttpClientModule, RouterModule.forRoot(routes)),
     provideHttpClient(withInterceptorsFromDi()),
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }, provideAnimationsAsync()
   ]
 })
   .catch(err => console.error(err));

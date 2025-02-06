@@ -3,8 +3,8 @@ export interface Post {
     title: string;  
     userId: string;
     content: string;
-    createdAt: any; // หรือ Date ถ้าคุณแปลงแล้ว
-    updatedAt: any;
+    createdAt: Date; // หรือ Date ถ้าคุณแปลงแล้ว
+    updatedAt?: Date;
     username: string;
     profilePicture: string;
   }

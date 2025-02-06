@@ -76,6 +76,9 @@ export class AuthService {
       let decodedToken;
       try {
         decodedToken = this.decodeToken(token); // Decode the token
+        if (!decodedToken || !decodedToken.sub || !decodedToken.userId) {
+          throw new Error('Token missing required fields');
+        }
       } catch (decodeError) {
         console.error('Error decoding token:', decodeError);
         throw new Error('Failed to decode token');
@@ -94,6 +97,7 @@ export class AuthService {
       return { username: 'Unknown', id: 'Unknown' };
     }
   }
+  
   
 
   // ใน AuthService

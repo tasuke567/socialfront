@@ -1,178 +1,41 @@
-<div class="container mx-auto p-4 max-w-3xl">
-  <!-- Loading Spinner -->
-  <div *ngIf="loading" class="flex justify-center my-4" aria-live="polite">
-    <div
-      class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
-      aria-label="Loading..."
-    ></div>
-  </div>
+<!-- src/app/features/friends/components/friends.component.html -->
 
-  <!-- Alert Messages -->
-  <div
-    *ngIf="errorMessage"
-    class="alert alert-error mb-4"
-    role="alert"
-    aria-live="assertive"
-  >
-    <div class="alert-content">
-      <p class="text-sm font-medium">{{ errorMessage }}</p>
-    </div>
-    <button
-      (click)="errorMessage = ''"
-      class="alert-close"
-      aria-label="Dismiss error message"
-    >
-      ✕
-    </button>
-  </div>
+<div *ngIf="loading" class="loading-spinner">Loading...</div>
 
-  <div
-    *ngIf="successMessage"
-    class="alert alert-success mb-4"
-    role="alert"
-    aria-live="polite"
-  >
-    <p class="text-sm">{{ successMessage }}</p>
-    <button
-      (click)="successMessage = ''"
-      class="alert-close"
-      aria-label="Dismiss success message"
-    >
-      ✕
-    </button>
-  </div>
+<div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+<div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-  <!-- Search Section -->
-  <div
-    class="search-container p-4 bg-white shadow-lg rounded-lg max-w-lg mx-auto"
-  >
-    <input
-      type="text"
-      [(ngModel)]="searchQuery"
-      placeholder="Search for friends..."
-      class="input"
-    />
-    <button
-      (click)="searchFriends(searchQuery)"
-      class="btn btn-primary"
-      [disabled]="!searchQuery.trim()"
-    >
-      Search
-    </button>
-  </div>
+<h2>Your Friends</h2>
 
-  <ul *ngIf="searchResults.length > 0" class="search-results mt-4">
-    <li *ngFor="let user of searchResults" class="search-item">
-      {{ user.username }}
+<!-- Search friends -->
+<input
+  type="text"
+  [(ngModel)]="searchQuery"
+  (ngModelChange)="searchFriends()"
+  placeholder="Search for friends"
+  class="search-bar"
+/>
+
+<div *ngIf="searchResults.length > 0">
+  <h3>Search Results:</h3>
+  <ul>
+    <li *ngFor="let user of searchResults">
+      {{ user.firstName }} {{ user.lastName }}
+      <button
+        *ngIf="!isRequestSent(user.id)"
+        (click)="sendFriendRequest(user.id)"
+        class="btn"
+      >
+        Send Friend Request
+      </button>
     </li>
   </ul>
-  <p
-    *ngIf="searchResults.length === 0 && searchQuery.trim()"
-    class="text-gray-500"
-  >
-    No friends found.
-  </p>
-
-  <!-- Friends List -->
-  <div class="mt-6">
-    <!-- Empty State -->
-    <div
-      *ngIf="friends.length === 0 && !loading"
-      class="empty-state text-center p-4 md:p-8"
-    >
-      <div class="icon-container flex justify-center mb-4">
-        <svg
-          class="icon w-16 h-16 md:w-24 md:h-24 text-gray-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-          />
-        </svg>
-      </div>
-      <h3
-        class="empty-title text-lg md:text-2xl font-semibold text-gray-900 mb-2"
-      >
-        No Friends Yet
-      </h3>
-      <p class="empty-description text-sm md:text-lg text-gray-600 mb-4">
-        Start building your friend list by adding your first friend!
-      </p>
-    </div>
-
-    <!-- Sort Buttons -->
-    <div *ngIf="friends.length > 0" class="sort-buttons">
-      <button (click)="sortFriendsById()" class="btn btn-secondary">
-        Sort by ID
-      </button>
-      <button (click)="sortFriendsByName()" class="btn btn-secondary">
-        Sort by Name
-      </button>
-    </div>
-
-    <!-- Friends List -->
-    <ul class="friends-list" *ngIf="friends.length > 0">
-      <li *ngFor="let friend of friends" class="friend-item">
-        <div>
-          <span class="friend-name">{{ friend.name || friend.id }}</span>
-          <small *ngIf="friend.name" class="friend-id"
-            >(ID: {{ friend.id }})</small
-          >
-        </div>
-        <div class="friend-actions">
-          <button
-            *ngIf="!isRequestSent(friend.id)"
-            (click)="sendFriendRequest(friend.id)"
-            class="ml-4 bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600"
-          >
-            Add Friend
-          </button>
-
-          <button
-            *ngIf="isRequestSent(friend.id)"
-            class="ml-4 bg-gray-500 text-white px-3 py-1 rounded-lg"
-            disabled
-          >
-            Request Sent
-          </button>
-
-          <button
-            class="btn btn-danger"
-            (click)="unfriend(friend.id)"
-            [disabled]="loading"
-          >
-            Unfriend
-          </button>
-        </div>
-      </li>
-    </ul>
-  </div>
-
-  <!-- Add Friend Form -->
-  <div class="add-friend-form">
-    <h5 class="form-title">Add New Friend</h5>
-    <div class="form-body">
-      <input
-        type="text"
-        class="input"
-        [(ngModel)]="newFriendId"
-        placeholder="Enter friend's ID"
-        [disabled]="loading"
-        (keydown.enter)="addFriend()"
-      />
-      <button
-        (click)="addFriend()"
-        class="btn btn-primary"
-        [disabled]="!newFriendId || loading"
-      >
-        Add Friend
-      </button>
-    </div>
-  </div>
 </div>
+
+<!-- Friends List -->
+<ul>
+  <li *ngFor="let friend of friends">
+    {{ friend.firstName }} {{ friend.lastName }}
+    <button (click)="removeFriend(friend.id)" class="btn">Remove</button>
+  </li>
+</ul>

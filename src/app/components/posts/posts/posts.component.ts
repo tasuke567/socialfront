@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Post } from './models/post.model';
 import { formatDistanceToNow } from 'date-fns';
 import { AuthService } from '../../../services/auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-posts',
@@ -20,28 +21,35 @@ export class PostsComponent {
   isLoading: boolean = false;
   isEditing: boolean = false;
   editPostId: string = '';
-  currentUserProfileUrl: string | null = null; 
+  currentUserProfileUrl: string | null = null;
   showActions: string | null = null;
-  // currentUser สามารถเป็น string ถ้าเก็บเพียงชื่อผู้ใช้
   currentUser: string = '';
-  // ตัวแปรสำหรับ feedback message
   feedbackMessage: string = '';
   isErrorFeedback: boolean = false;
-  // ตัวแปรสำหรับเก็บโพสต์ที่กำลังแก้ไข (ถ้าต้องการใช้ modal แบบ inline)
   editingPostContent: string = '';
-
+  public showActionsMap = new Map<string, boolean>();
   userId: string | null;
 
   constructor(
     private postsService: PostsService,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackBar: MatSnackBar
   ) {
     this.userId = this.authService.getUserId();
     const currentUserData = this.authService.getCurrentUser();
-    // สมมุติว่า currentUserData.username เป็น string
+    console.log('Current User Data:', currentUserData); // ดูค่าผลลัพธ์จาก getCurrentUser()
     this.currentUser = currentUserData.username;
   }
-  
+
+  showNotification(message: string, isError: boolean = false): void {
+    this.feedbackMessage = message;
+    this.isErrorFeedback = isError;
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      panelClass: isError ? 'snackbar-error' : 'snackbar-success',
+    });
+  }
+
   ngOnInit(): void {
     this.fetchPosts();
   }
@@ -53,7 +61,9 @@ export class PostsComponent {
         if (Array.isArray(data)) {
           // เรียงโพสต์จากวันที่ใหม่สุดอยู่ด้านบน (หากมีฟิลด์ createdAt ที่ถูกต้อง)
           this.posts = data.sort((a: any, b: any) => {
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            const dateA = new Date(a.updatedAt || a.createdAt).getTime();
+            const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+            return dateB - dateA; // เรียงโพสต์ใหม่สุดขึ้นก่อน
           });
         } else {
           this.posts = [];
@@ -62,8 +72,7 @@ export class PostsComponent {
       },
       (error) => {
         this.isLoading = false;
-        this.feedbackMessage = 'Error fetching Data';
-        this.isErrorFeedback = true;
+        this.showNotification('Error fetching Data.', false);
       }
     );
   }
@@ -81,43 +90,43 @@ export class PostsComponent {
 
   createPost(): void {
     if (!this.newPostContent.trim()) return;
-
-    if (!this.userId || !this.currentUser) {
+  
+    if (!this.currentUser) {
       console.error('User not logged in or missing data');
-      this.feedbackMessage = 'User not logged in or missing data';
-      this.isErrorFeedback = true;
+      this.showNotification('User not logged in or missing data.', true);
       return;
     }
-
+  
     const title = this.newPostTitle.trim() || 'My Post';
-
+    this.isLoading = true;
+  
+    // เพิ่ม username ในการส่งข้อมูล
     const newPost = {
       title: title,
       content: this.newPostContent,
-      userId: Number(this.userId)
+      username: this.currentUser  // เพิ่ม username จาก currentUser
     };
-
+  
     this.postsService.createPost(newPost).subscribe(
-      (response: any) => {
+      (response: Post) => {
         console.log('Create Post Response:', response);
-        // สมมุติว่า backend ส่ง response แบบ { post: {...} } หรือส่ง object ของโพสต์โดยตรง
-        const createdPost = response.post || response;
-        if (createdPost) {
-          this.posts.unshift(createdPost);
-          this.feedbackMessage = 'Post created successfully.';
-          this.isErrorFeedback = false;
+        
+        if (response.id) {
+          this.posts.unshift(response);
+          this.showNotification('Post created successfully.', false);
         } else {
-          console.error('No post data found in response');
-          this.feedbackMessage = 'Post creation failed.';
-          this.isErrorFeedback = true;
+          console.error('Invalid post response');
+          this.showNotification('Post creation failed.', true);
         }
+  
         this.newPostContent = '';
         this.newPostTitle = '';
+        this.isLoading = false;
       },
       (error) => {
         console.error('Error creating post:', error);
-        this.feedbackMessage = 'Error creating post.';
-        this.isErrorFeedback = true;
+        this.showNotification('Error creating post.', true);
+        this.isLoading = false;
       }
     );
   }
@@ -135,10 +144,12 @@ export class PostsComponent {
     } else {
       this.createPost();
     }
+    this.resetEditing();
   }
 
   updatePost(postId: string, content: string): void {
     if (!postId) return;
+    this.isLoading = true;
 
     this.postsService.updatePost(postId, { content }).subscribe(
       (response: any) => {
@@ -148,18 +159,20 @@ export class PostsComponent {
         if (updatedPostIndex !== -1) {
           this.posts[updatedPostIndex].content = response.post.content;
           // สมมุติว่า backend ส่ง updatedAt ด้วย
-          this.posts[updatedPostIndex].updatedAt = new Date(response.post.updatedAt);
-          this.feedbackMessage = 'Post updated successfully.';
-          this.isErrorFeedback = false;
+          this.posts[updatedPostIndex].updatedAt = new Date(
+            response.post.updatedAt
+          );
+          this.showNotification('Post updated successfully.', true);
         }
         this.isEditing = false;
         this.editingPostContent = '';
         this.editPostId = '';
+        this.isLoading = false;
       },
       (error) => {
         console.error('Error updating post:', error);
-        this.feedbackMessage = 'Error updating post.';
-        this.isErrorFeedback = true;
+        this.showNotification('Error updating post.', false);
+        this.isLoading = false;
       }
     );
   }
@@ -167,29 +180,34 @@ export class PostsComponent {
   deletePost(postId: string): void {
     if (!this.userId) {
       console.error('User not logged in');
-      this.feedbackMessage = 'User not logged in';
-      this.isErrorFeedback = true;
+      this.showNotification('User not logged in', false);
       return;
     }
     // ใช้ confirm dialog เพื่อขอยืนยันการลบโพสต์
     if (!window.confirm('Are you sure you want to delete this post?')) {
       return;
     }
+    this.isLoading = true;
     this.postsService.deletePost(postId, Number(this.userId)).subscribe(
       () => {
         this.posts = this.posts.filter((post) => post.id !== postId);
-        this.feedbackMessage = 'Post deleted successfully.';
-        this.isErrorFeedback = false;
+        this.showNotification('Post deleted successfully.', true);
+        this.isLoading = false;
       },
       (error) => {
         console.error('Error deleting post:', error);
-        this.feedbackMessage = 'Error deleting post.';
-        this.isErrorFeedback = true;
+        this.showNotification('Error deleting post.', false);
+        this.isLoading = false;
       }
     );
   }
 
   toggleActions(postId: string): void {
-    this.showActions = this.showActions === postId ? null : postId;
+    this.showActionsMap.set(postId, !this.showActionsMap.get(postId));
+  }
+  resetEditing(): void {
+    this.isEditing = false;
+    this.editPostId = '';
+    this.editingPostContent = '';
   }
 }

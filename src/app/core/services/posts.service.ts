@@ -3,6 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../services/auth.service'; // import AuthService
 
+interface CreatePostDto {
+  title: string;
+  content: string;
+  username: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -17,7 +23,7 @@ export class PostsService {
   }
 
   // สร้างโพสต์ใหม่
-  createPost(post: any): Observable<any> {
+  createPost(post: CreatePostDto): Observable<any> {
     return this.http.post<any>(this.apiUrl, post);
   }
 
