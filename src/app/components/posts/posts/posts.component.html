@@ -7,7 +7,6 @@
   >
     <!-- User Profile -->
     <div class="flex items-center mb-4">
-      <!-- แสดงรูปโปรไฟล์ ถ้ามี; ใช้ placeholder ถ้าไม่มี -->
       <img
         *ngIf="currentUserProfileUrl; else noProfile"
         [src]="currentUserProfileUrl"
@@ -91,40 +90,43 @@
 
   <!-- การแสดงโพสต์ทั้งหมด -->
   <div class="posts-container">
+    <!-- วนลูปแสดงโพสต์ทั้งหมด -->
     <div
       *ngFor="let post of posts"
       class="post-item border border-gray-200 rounded-lg shadow p-4 mb-4 bg-white"
     >
+      <!-- Header ของโพสต์ -->
       <div class="post-header flex justify-between items-center">
         <div class="flex items-center">
           <!-- แสดงรูปโปรไฟล์ของผู้โพสต์ ถ้ามี -->
           <img
-            *ngIf="post.profilePicture; else noPostProfile"
-            [src]="post.profilePicture"
+            *ngIf="post.owner.profilePicture; else noProfile"
+            [src]="post.owner.profilePicture"
             alt="Profile"
             class="w-8 h-8 rounded-full mr-2"
           />
-          <ng-template #noPostProfile>
+          <ng-template #noProfile>
             <div
               class="w-10 h-10 rounded-full mr-3 bg-gray-300 flex items-center justify-center text-white font-bold"
             >
-              {{ post.username || "" }}
+              {{
+                post.owner.username
+                  ? post.owner.username.charAt(0).toUpperCase()
+                  : "?"
+              }}
             </div>
           </ng-template>
-
           <div>
             <h3 class="text-xl font-semibold text-gray-800">
-              {{ post?.title }}
+              {{ post.title || "No Title" }}
             </h3>
             <small class="text-gray-500">
-              {{ post?.username ? post?.username : "Unknown User" }} -
-              {{
-                post?.createdAt ? formatRelativeTime(post?.createdAt) : "N/A"
-              }}
+              By: {{ post.owner.username }} -
+              {{ post.createdAt ? formatRelativeTime(post.createdAt) : "N/A" }}
             </small>
-            
           </div>
         </div>
+        <!-- ปุ่มสำหรับแสดง Actions (เช่น Edit/Delete) -->
         <button
           (click)="toggleActions(post.id)"
           class="bg-gray-500 text-white px-2 py-2 rounded hover:bg-gray-600 transition duration-200"
@@ -144,19 +146,26 @@
         </button>
       </div>
 
+      <!-- เนื้อหาของโพสต์ -->
       <div class="post-content my-4">
-        <p class="text-gray-700">{{ post?.content }}</p>
+        <p class="text-gray-700">
+          {{ post.content || "No content available." }}
+        </p>
       </div>
 
       <!-- Action Bar: Like, Comment, Share -->
       <div class="flex justify-around border-t border-gray-200 pt-2">
         <button
-          class="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-transform transform hover:scale-105 duration-200"
+          (click)="toggleLike(post.id)"
+          class="flex items-center space-x-1 transition-transform transform hover:scale-105 duration-200"
+          [ngClass]="
+            isLikedByCurrentUser(post) ? 'text-blue-600' : 'text-gray-600'
+          "
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="w-5 h-5"
-            fill="none"
+            [attr.fill]="isLikedByCurrentUser(post) ? 'blue' : 'none'"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
@@ -167,9 +176,12 @@
               d="M14 9l-5 5m0 0l-5-5m5 5V3"
             />
           </svg>
-          <span>Like</span>
+          <span>{{ getLikeCount(post) }} likes</span>
+          <span class="text-sm ml-1">({{ getLikeCount(post) }})</span>
         </button>
+
         <button
+          (click)="toggleCommentSection(post.id)"
           class="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition duration-200"
         >
           <svg
@@ -189,6 +201,7 @@
           <span>Comment</span>
         </button>
         <button
+          (click)="sharePost(post.id)"
           class="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition duration-200"
         >
           <svg
@@ -208,8 +221,50 @@
           <span>Share</span>
         </button>
       </div>
+      <div *ngIf="postLikersMap.get(post.id)?.length" class="likers-list mt-2">
+        <h4 class="text-sm font-medium">Liked by:</h4>
+        <div class="flex flex-wrap gap-2 mt-1">
+          <div
+            *ngFor="let user of postLikersMap.get(post.id)"
+            class="flex items-center text-sm text-gray-600"
+          >
+            <img
+              *ngIf="user.profilePicture; else noProfile"
+              [src]="user.profilePicture"
+              alt="Profile"
+              class="w-8 h-8 rounded-full mr-2"
+            />
+            <ng-template #noProfile>
+              <div
+                class="w-8 h-8 rounded-full mr-2 bg-gray-300 flex items-center justify-center text-white font-bold text-xs"
+              >
+                {{
+                  user.username ? user.username.charAt(0).toUpperCase() : "?"
+                }}
+              </div>
+            </ng-template>
+            {{ user.username }}
+          </div>
+        </div>
+      </div>
+      <!-- ช่องข้อความสำหรับคอมเม้นต์ (สามารถเปิด/ปิดได้) -->
+      <div *ngIf="post.showCommentSection" class="comment-section mt-4">
+        <textarea
+          [(ngModel)]="newCommentTextMap[post.id]"
+          placeholder="Write a comment..."
+          rows="3"
+          class="w-full border border-gray-300 rounded-lg p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        ></textarea>
+        <button
+          (click)="commentOnPost(post.id, newCommentTextMap[post.id] || '')"
+          class="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition duration-300"
+          [disabled]="!newCommentTextMap[post.id].trim()"
+        >
+          Comment
+        </button>
+      </div>
 
-      <!-- แสดงปุ่ม Edit และ Delete เมื่อคลิก Show Options -->
+      <!-- แสดงปุ่ม Edit และ Delete เมื่อมีการเปิดแสดง Actions -->
       <div
         *ngIf="showActionsMap.get(post.id)"
         class="post-actions mt-2 flex space-x-2"
@@ -226,6 +281,45 @@
         >
           Delete
         </button>
+      </div>
+
+      <!-- แสดง Comments ที่มีอยู่ -->
+      <div *ngIf="post.comments && post.comments.length > 0" class="mt-4">
+        <h4 class="text-lg font-semibold mb-2">Comments:</h4>
+        <div
+          *ngFor="let comment of post.comments"
+          class="mb-2 border-b border-gray-200 pb-2"
+        >
+          <div class="flex items-start mb-1">
+            <!-- Add profile picture for commenter -->
+            <img
+              *ngIf="comment.profilePicture; else noCommentProfile"
+              [src]="comment.profilePicture"
+              alt="Profile"
+              class="w-6 h-6 rounded-full mr-2"
+            />
+            <ng-template #noCommentProfile>
+              <div
+                class="w-6 h-6 rounded-full mr-2 bg-gray-300 flex items-center justify-center text-xs text-white font-bold"
+              >
+                {{ (comment.username || 'Anonymous').charAt(0) || '?' }}
+              </div>
+            </ng-template>
+
+            <!-- Improved comment content display -->
+            <div class="flex-1">
+              <p *ngIf="comment.content?.trim()" class="text-sm">
+                <span class="font-medium">
+                  {{ comment.username || 'Anonymous' }}:
+                </span>
+                <span class="text-gray-700 ml-1">{{ comment.content }}</span>
+              </p>
+              <small class="text-gray-500 text-xs block mt-1">
+                {{ formatRelativeTime(comment.createdAt) }}
+              </small>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

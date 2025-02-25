@@ -91,7 +91,7 @@ export class AuthService {
         console.warn('Token missing required fields: username or userId');
       }
       
-      return { username, id: userId };
+      return { username, id: userId,profilePicture: decodedToken.profilePicture || null  };
     } catch (error) {
       console.error('Error in getCurrentUser:', error);
       return { username: 'Unknown', id: 'Unknown' };
