@@ -1,0 +1,139 @@
+<!-- Post Item Container -->
+<div
+  *ngIf="post"
+  class="post-item bg-white border border-gray-200 max-w-2xl rounded-xl shadow-md p-5 mb-5 mx-auto transition-all hover:shadow-lg duration-300"
+>
+  <!-- Header -->
+  <header
+    class="flex flex-row sm:justify-around sm:items-center mb-4 sm:flex-end"
+  >
+    <div class="flex items-center gap-3">
+      <!-- Profile Picture Component -->
+      <app-profile-picture
+          [profileUrl]="user?.profilePicture ?? null"
+          [username]="user?.username || 'Unknown User'"
+          [size]="'5'"
+        >
+        </app-profile-picture>
+
+      <!-- Title & Meta Data -->
+      <div>
+        <h3 class="text-base sm:text-lg font-semibold text-gray-800">
+          {{ post.title || "No Title" }}
+        </h3>
+        <small class="text-xs sm:text-sm text-gray-500">
+          By: {{ post.username }} - {{ formatRelativeTime(post.created_at) }}
+        </small>
+      </div>
+    </div>
+    <!-- Share Component (อยู่ด้านบนขวาเสมอ) -->
+    <app-shares
+      class="ml-auto"
+      [postId]="post.id"
+      [shareCount]="post.share_count"
+    ></app-shares>
+  </header>
+
+  <!-- Content Section -->
+  <section class="post-content mb-4">
+    <p class="text-sm sm:text-md text-gray-700">
+      {{ post.content || "No content available." }}
+    </p>
+  </section>
+
+  <!-- Action Bar: Like, Comment, Edit, Delete -->
+  <div
+    class="flex flex-row items-center justify-around border-t border-gray-200 pt-3 px-2"
+  >
+    <!-- Like Button -->
+    <button
+      (click)="toggleLike(post.id!)"
+      [disabled]="loadingLikeIds.has(post.id!)"
+      class="flex items-center gap-1 text-gray-600 hover:text-pink-500 transition-all"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+        class="w-5 h-5 sm:w-6 sm:h-6"
+        [attr.fill]="isLikedByCurrentUser(post.id!) ? 'pink' : 'none'"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+        />
+      </svg>
+      <span class="hidden sm:inline text-xs sm:text-sm">
+        {{ getLikeCount(post) || 0 }}
+      </span>
+    </button>
+
+    <!-- Comment Button -->
+    <button
+      (click)="onComment.emit(post.id)"
+      class="flex items-center gap-1 text-gray-600 hover:text-blue-500 transition-all"
+    >
+      <span class="text-xl">💬</span>
+    </button>
+
+    <!-- Edit Button -->
+    <button
+      (click)="openEditModal(post)"
+      class="flex items-center gap-1 text-green-600 hover:text-green-500 transition-all"
+    >
+      <span class="text-xl">✏️</span>
+    </button>
+
+    <!-- Delete Button -->
+    <button
+      (click)="showDeleteModal = true"
+      class="flex items-center gap-1 text-red-600 hover:text-red-500 transition-all"
+    >
+      <span class="text-xl">🗑️</span>
+    </button>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <app-confirm-delete-modal
+    *ngIf="showDeleteModal"
+    (confirm)="deletePost(post.id!)"
+    (cancel)="showDeleteModal = false"
+  ></app-confirm-delete-modal>
+
+  <!-- Likers Information -->
+  <div
+    class="mt-2 text-xs text-gray-500"
+    *ngIf="postLikersMap.get(post?.id!)?.length"
+  >
+    Liked by:
+    <span
+      *ngFor="
+        let user of postLikersMap.get(post?.id!)?.slice(0, 3);
+        let last = last
+      "
+    >
+      {{ user.username }}{{ !last ? ", " : "" }}
+    </span>
+    <span *ngIf="(postLikersMap.get(post?.id!)?.length || 0) > 3">
+      and {{ (postLikersMap.get(post.id!)?.length || 0) - 3 }} others
+    </span>
+  </div>
+
+  <!-- Comment Section -->
+  <div class="mt-4">
+    <app-comments
+      *ngIf="post.show_comment_section"
+      [postId]="post.id"
+      (onSubmit)="onCommentSubmit.emit($event)"
+    ></app-comments>
+  </div>
+  <!-- Edit Post Modal -->
+  <app-edit-post-modal
+    *ngIf="showEditModal"
+    [post]="selectedPost"
+    (save)="savePost($event)"
+    (cancel)="closeEditModal()"
+  ></app-edit-post-modal>
+</div>

@@ -1,0 +1,114 @@
+/* Container สำหรับแชท */
+.chat-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+  
+  /* Header */
+  .chat-header {
+    background-color: #007bff;
+    padding: 1rem;
+    color: #fff;
+    text-align: center;
+  }
+  
+  /* ส่วนข้อความ */
+  .chat-messages {
+    padding: 1rem;
+    flex: 1;
+    overflow-y: auto;
+    background: #f9f9f9;
+  }
+  
+  /* กำหนดพื้นฐานให้แต่ละข้อความ */
+  .chat-message {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 5px;
+    max-width: 70%;
+    clear: both;
+  }
+  
+  /* ข้อความที่ส่งโดยตัวเรา (sender) จัดชิดขวา */
+  .chat-message.sent {
+    background-color: #daf8cb;  /* สีเขียวอ่อน */
+    margin-left: auto;
+    text-align: right;
+  }
+  
+  /* ข้อความที่รับ (จากเพื่อน) จัดชิดซ้าย */
+  .chat-message.received {
+    background-color: #f1f0f0;  /* สีเทาอ่อน */
+    margin-right: auto;
+    text-align: left;
+  }
+  
+  /* ส่วนข้อมูลผู้ส่งและเวลา */
+  .message-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
+    color: #555;
+  }
+  
+  .username {
+    font-weight: bold;
+  }
+  
+  .timestamp {
+    font-style: italic;
+  }
+  
+  /* เนื้อความของข้อความ */
+  .message-content {
+    font-size: 1rem;
+    color: #333;
+  }
+  
+  /* ส่วน input สำหรับส่งข้อความ */
+  .chat-input-container {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid #eee;
+    background: #fff;
+  }
+  
+  .chat-input {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  
+  .chat-input:focus {
+    border-color: #007bff;
+  }
+  
+  /* ปุ่มส่งข้อความ */
+  .send-button {
+    margin-left: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 20px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .send-button:hover {
+    background-color: #0056b3;
+  }
+  

@@ -1,0 +1,142 @@
+<div class="container mx-auto p-4">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-4">
+    <p class="text-lg text-gray-600 dark:text-gray-300">Loading...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div
+    *ngIf="errorMessage"
+    class="bg-red-100 border border-red-300 text-red-700 p-4 rounded-lg text-center mb-4 dark:bg-red-800 dark:text-red-200"
+  >
+    {{ errorMessage }}
+  </div>
+
+  <!-- Profile Card -->
+  <div
+    *ngIf="user"
+    class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6 dark:bg-gray-900"
+  >
+    <div class="flex flex-col items-center">
+      <!-- Profile Picture -->
+      <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-300 dark:border-gray-600">
+        <img
+          *ngIf="user.profilePicture; else noImage"
+          [src]="user.profilePicture"
+          alt="Profile Picture"
+          class="w-full h-full object-cover"
+        />
+        <ng-template #noImage>
+          <div
+            class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+          >
+            <span class="text-gray-600 dark:text-gray-400 text-lg">No Image</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Username -->
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mt-4">
+        {{ user.username }}
+      </h2>
+
+      <!-- Bio -->
+      <p
+        *ngIf="user.bio; else noBio"
+        class="text-gray-500 mt-1 dark:text-gray-400"
+      >
+        {{ user.bio }}
+      </p>
+      <ng-template #noBio>
+        <p class="text-gray-500 mt-1 italic dark:text-gray-400">
+          No bio available.
+        </p>
+      </ng-template>
+    </div>
+
+    <!-- Profile Details -->
+    <div class="mt-8 border-t pt-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <p class="font-semibold text-gray-700 dark:text-gray-300">
+            First Name:
+          </p>
+          <p class="text-gray-600 dark:text-gray-400">
+            {{ user.firstName }}
+          </p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-700 dark:text-gray-300">
+            Last Name:
+          </p>
+          <p class="text-gray-600 dark:text-gray-400">
+            {{ user.lastName }}
+          </p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-700 dark:text-gray-300">
+            Account Created:
+          </p>
+          <p class="text-gray-600 dark:text-gray-400">
+            {{ user.createdAt | date:"dd/MM/yyyy HH:mm" }}
+          </p>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-700 dark:text-gray-300">
+            Last Updated:
+          </p>
+          <p class="text-gray-600 dark:text-gray-400">
+            {{ user.updatedAt | date:"dd/MM/yyyy HH:mm" }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Interests Section -->
+      <div class="mt-4">
+        <p class="font-semibold text-gray-700 dark:text-gray-300">
+          Interests ({{ user.interests?.length || 0 }}):
+        </p>
+        <ul class="list-disc list-inside pl-4">
+          <li
+            *ngFor="let interest of user.interests"
+            class="text-gray-600 dark:text-gray-400"
+          >
+            {{ interest }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- Statistics -->
+      <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-xl font-bold text-gray-800 dark:text-gray-200">
+            {{ user.postsCount || 0 }}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Posts</p>
+        </div>
+        <div>
+          <p class="text-xl font-bold text-gray-800 dark:text-gray-200">
+            {{ user.followersCount || 0 }}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Followers</p>
+        </div>
+        <div>
+          <p class="text-xl font-bold text-gray-800 dark:text-gray-200">
+            {{ user.followingCount || 0 }}
+          </p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Following</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Profile Button -->
+    <div class="mt-6 flex justify-center">
+      <button
+        routerLink="/profile/{{user.username}}/edit"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+      >
+        Edit Profile
+      </button>
+    </div>
+  </div>
+</div>

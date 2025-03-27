@@ -1,0 +1,118 @@
+<div class="min-h-screen flex flex-col lg:flex-row">
+  <!-- Left: Decoration (only on large screens) -->
+  <div class="hidden lg:flex lg:w-1/2 items-center justify-end bg-cover bg-center ml-52 max-w-lg" >
+    <div class="bg-blue-700 bg-opacity-90 p-8 rounded-lg">
+      <h2 class="text-4xl text-white font-semibold mb-3">Testbook</h2>
+      <p class="text-white text-lg">
+        Connects you with fellow learners and expert educators to unlock your academic potential.
+      </p>
+    </div>
+  </div>
+
+  <!-- Right: Login Form -->
+  <div class="flex items-center justify-center w-full lg:w-1/2  p-10">
+    <div class="w-full max-w-md  p-6 sm:p-8 rounded-lg shadow-lg">
+      <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">Sign In</h1>
+      <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="space-y-6">
+        <!-- Username Field -->
+        <div>
+          <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
+            Username
+          </label>
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            aria-describedby="username-error"
+            class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-500]="username.invalid && username.touched"
+          />
+          <div
+            *ngIf="username.invalid && username.touched"
+            id="username-error"
+            class="mt-1 text-sm text-red-600"
+            role="alert"
+          >
+            <p *ngIf="username.errors?.['required']">• Username is required</p>
+            <p *ngIf="username.errors?.['pattern']">
+              • 3-20 characters (letters, numbers, underscores)
+            </p>
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            aria-describedby="password-error"
+            class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            [class.border-red-500]="password.invalid && password.touched"
+          />
+          <div
+            *ngIf="password.invalid && password.touched"
+            id="password-error"
+            class="mt-1 text-sm text-red-600"
+            role="alert"
+          >
+            <p *ngIf="password.errors?.['required']">• Password is required</p>
+            <p *ngIf="password.errors?.['minlength']">• Minimum 6 characters required</p>
+            <p *ngIf="password.errors?.['pattern']">
+              • Must contain at least 1 letter and 1 number
+            </p>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          [disabled]="isLoading || loginForm.invalid"
+          class="w-full py-3 px-4 rounded-md font-medium text-white transition-colors bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400"
+          aria-live="polite"
+        >
+          <span *ngIf="!isLoading">Sign In</span>
+          <span *ngIf="isLoading" class="flex items-center justify-center">
+            <svg class="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Signing In...
+          </span>
+        </button>
+
+        <!-- Error Message -->
+        <div
+          *ngIf="errorMessage"
+          class="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600 flex items-center"
+          role="alert"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fill-rule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          {{ errorMessage }}
+        </div>
+      </form>
+
+      <!-- Registration Link -->
+      <p class="mt-6 text-center text-sm text-gray-600">
+        Don't have an account?
+        <a
+          routerLink="/register"
+          class="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+        >
+          Create account
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

@@ -1,41 +1,210 @@
-<!-- src/app/features/friends/components/friends.component.html -->
+<div class="container mx-auto p-6">
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="flex justify-center items-center mb-4">
+    <svg
+      class="animate-spin h-8 w-8 text-blue-600"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      ></path>
+    </svg>
+  </div>
 
-<div *ngIf="loading" class="loading-spinner">Loading...</div>
+  <!-- Success & Error Messages -->
+  <div
+    *ngIf="successMessage"
+    class="bg-green-100 text-green-800 p-3 rounded mb-4 text-center"
+  >
+    {{ successMessage }}
+  </div>
+  <div
+    *ngIf="errorMessage"
+    class="bg-red-100 text-red-800 p-3 rounded mb-4 text-center"
+  >
+    {{ errorMessage }}
+  </div>
 
-<div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
-<div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+  <!-- Search Friends Section -->
+  <app-search
+    *ngIf="showSearch"
+    (search)="onSearch($event)"
+    (clear)="onClear()"
+    (addFriend)="sendFriendRequest($event)"
+    (friendAdded)="
+      loadFriends();
+      loadSuggestions();
+      searchFriends();
+      refreshData('all')
+    "
+  >
+  </app-search>
 
-<h2>Your Friends</h2>
-
-<!-- Search friends -->
-<input
-  type="text"
-  [(ngModel)]="searchQuery"
-  (ngModelChange)="searchFriends()"
-  placeholder="Search for friends"
-  class="search-bar"
-/>
-
-<div *ngIf="searchResults.length > 0">
-  <h3>Search Results:</h3>
-  <ul>
-    <li *ngFor="let user of searchResults">
-      {{ user.firstName }} {{ user.lastName }}
-      <button
-        *ngIf="!isRequestSent(user.id)"
-        (click)="sendFriendRequest(user.id)"
-        class="btn"
-      >
-        Send Friend Request
-      </button>
+  <!-- Your Friends Section -->
+<h2 class="text-2xl font-bold mb-4">Your Friends</h2>
+<p class="mb-4 text-gray-600">You have {{ friends.length }} friends.</p>
+<div>
+  <ul class="space-y-4">
+    <li
+      *ngFor="let friend of friends"
+      class="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all"
+    >
+      <div class="flex items-center gap-4">
+        <img
+          *ngIf="friend?.profilePicture"
+          [src]="friend?.profilePicture"
+          alt="{{ friend?.firstName }}'s profile picture"
+          class="h-12 w-12 rounded-full object-cover border-2 border-gray-100"
+        />
+        <div>
+          <span class="text-gray-800 text-lg font-medium">
+            {{ friend?.firstName }} {{ friend?.lastName }}
+          </span>
+          <p class="text-sm text-gray-500">&#64;{{ friend?.username }}</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <!-- ปุ่ม Chat -->
+        <button
+          (click)="openChat(friend.id)"
+          class="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+        >
+          Chat
+        </button>
+        <!-- ปุ่ม Remove -->
+        <button
+          (click)="removeFriend(friend.id)"
+          class="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+        >
+          Unfriend
+        </button>
+      </div>
     </li>
   </ul>
 </div>
 
-<!-- Friends List -->
-<ul>
-  <li *ngFor="let friend of friends">
-    {{ friend.firstName }} {{ friend.lastName }}
-    <button (click)="removeFriend(friend.id)" class="btn">Remove</button>
-  </li>
-</ul>
+
+  <!-- Pending Friend Requests -->
+  <div *ngIf="showPendingRequests" class="mb-5 my-3">
+    <h3 class="text-xl font-semibold mb-4">
+      Pending Requests ({{ pendingRequests.length }})
+    </h3>
+    <ul class="space-y-3">
+      <li
+        *ngFor="let request of pendingRequests"
+        class="flex items-center justify-between bg-gray-50 p-3 rounded shadow hover:bg-gray-100 transition"
+      >
+        <div class="flex items-center">
+          <img
+            *ngIf="request?.profilePicture"
+            [src]="request?.profilePicture"
+            class="h-10 w-10 rounded-full mr-3 object-cover"
+          />
+          <span class="text-gray-800 font-medium">
+            {{ request?.username }}
+          </span>
+        </div>
+        <div class="space-x-2">
+          <button
+            (click)="cancelRequest(request.toUserId)"
+            class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+          >
+            Cancel Request
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Incoming Friend Requests -->
+  <app-incoming-requests
+    *ngIf="showIncomingRequests"
+    (acceptRequest)="acceptFriendRequest($event)"
+    (declineRequest)="declineFriendRequest($event)"
+  >
+  </app-incoming-requests>
+
+  <!-- Friend Suggestions -->
+  <div
+    *ngIf="showSuggestions && visibleSuggestions.length > 0"
+    class="max-w-7xl mx-auto mt-5"
+  >
+    <h3 class="text-xl font-semibold text-gray-900 mb-4 text-center">
+      People You May Know
+    </h3>
+
+    <!-- แสดงรายการเฉพาะตาม page/pageSize -->
+    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <li
+        *ngFor="let suggestion of visibleSuggestions"
+        class="bg-white p-5 rounded-2xl shadow-md hover:shadow-lg transition-all flex flex-col items-center text-center"
+      >
+        <!-- ถ้ามีรูป ให้แสดง profilePicture, ถ้าไม่มีให้ใช้ default -->
+        <img
+          *ngIf="suggestion?.profilePicture; else defaultAvatar"
+          [src]="suggestion?.profilePicture"
+          class="h-16 w-16 rounded-full object-cover border-4 border-gray-200 mb-3"
+        />
+        <ng-template #defaultAvatar>
+          <div
+            class="h-16 w-16 flex items-center justify-center bg-gray-300 rounded-full text-gray-600 mb-3"
+          >
+            <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                fill-rule="evenodd"
+                d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v1h16v-1c0-2.66-5.33-4-8-4z"
+              ></path>
+            </svg>
+          </div>
+        </ng-template>
+
+        <div>
+          <span class="text-gray-800 text-lg font-semibold">
+            {{ suggestion?.firstName }} {{ suggestion?.lastName }}
+          </span>
+          <p class="text-sm text-gray-500">&#64;{{ suggestion?.username }}</p>
+        </div>
+
+        <button
+          (click)="suggestion?.id ? sendFriendRequest(suggestion.id) : null"
+          class="mt-3 w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          Add Friend
+        </button>
+      </li>
+    </ul>
+
+    <!-- Pagination Controls -->
+    <div class="flex justify-center items-center space-x-4 mt-6">
+      <button
+        (click)="prevPage()"
+        class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition text-gray-700 font-medium max-w-30"
+        [disabled]="currentPage <= 1"
+      >
+        Previous
+      </button>
+      <span class="text-gray-600 font-medium">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+      <button
+        (click)="nextPage()"
+        class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition text-gray-700 font-medium max-w-20"
+        [disabled]="currentPage >= totalPages"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div>

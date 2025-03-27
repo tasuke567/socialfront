@@ -1,52 +1,111 @@
-// src/app/features/friends/services/friends-api.service.ts
-
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpHeaders,
+} from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { User } from '../../../shared/models/user.model';
+import { FriendRequest } from '../models';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FriendsApiService {
-  private apiUrl = 'http://localhost:8080/api/friends'; // Change to your API URL
+  // Base URL ของ API เพื่อน ๆ ของเรา
+  private apiUrl = 'http://localhost:8080/api/friends';
 
   constructor(private http: HttpClient) {}
 
+  private getHeaders() {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  }
+
+  // ฟังก์ชันจับ error แบบเจน Z: แจ้ง error แบบสั้น ๆ ไม่ต้องมาปวดหัว
   private handleError(error: HttpErrorResponse): Observable<never> {
-    console.error('API Error:', error);
-    return throwError(() => error.error?.message || 'Something went wrong!');
+    console.error('Friends API Error:', error);
+    return throwError(
+      () => error.error?.message || 'Something went wrong, bro!'
+    );
   }
 
-  // Get friends of a user
-  getFriends(userId: string): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/${userId}`).pipe(catchError(this.handleError));
+  // ดึงรายชื่อเพื่อนของตัวเอง (จาก token ที่ล็อกอินอยู่)
+  getFriends(): Observable<User[]> {
+    return this.http
+      .get<User[]>(`${this.apiUrl}/list`, { headers: this.getHeaders() })
+      .pipe(catchError(this.handleError));
   }
 
-  // Add a friend
-  addFriend(userId: string, friendId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${userId}/add-friend/${friendId}`, {}).pipe(catchError(this.handleError));
+  // ดึงคำขอเป็นเพื่อนที่ค้างอยู่ (เช็ค inbox เพื่อน ๆ กันเลย)
+  getPendingRequests(): Observable<FriendRequest[]> {
+    return this.http
+      .get<FriendRequest[]>(`${this.apiUrl}/pending-requests`, {
+        headers: this.getHeaders(),
+      })
+      .pipe(catchError(this.handleError));
   }
 
-  // Remove a friend
-  removeFriend(userId: string, friendId: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${userId}/remove-friend/${friendId}`).pipe(catchError(this.handleError));
+  getRequests(): Observable<FriendRequest[]> {
+    return this.http
+      .get<FriendRequest[]>(`${this.apiUrl}/requests`, {
+        headers: this.getHeaders(),
+      })
+      .pipe(catchError(this.handleError));
+  }
+ 
+
+  // แนะนำเพื่อนใหม่ ๆ ให้คุณ (บางทีคุณอาจอยากขยายวงเพื่อนให้ mega cool)
+  getFriendSuggestions(): Observable<User[]> {
+    return this.http
+      .get<User[]>(`${this.apiUrl}/suggestions`, { headers: this.getHeaders() })
+      .pipe(catchError(this.handleError));
   }
 
-  // Check if two users are friends
-  checkFriendship(userId: string, friendId: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/check/${friendId}`).pipe(catchError(this.handleError));
+  // ส่งคำขอเป็นเพื่อนไปหาใครสักคน (ส่ง vibes ดี ๆ ให้กับ userId ที่เลือก)
+  sendFriendRequest(userId: string): Observable<string> {
+    return this.http
+      .post<string>(
+        `${this.apiUrl}/request/${userId}`,
+        {},
+        { headers: this.getHeaders() }
+      )
+      .pipe(catchError(this.handleError));
   }
 
-  // Send a friend request
-  sendFriendRequest(userId: string, friendId: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/${userId}/request`, { friendId }).pipe(catchError(this.handleError));
+  // ยอมรับคำขอเป็นเพื่อน (รับ vibes ดี ๆ จากคำขอที่เข้ามา)
+  acceptFriendRequest(requestId: string): Observable<string> {
+    return this.http
+      .post<string>(
+        `${this.apiUrl}/accept/${requestId}`,
+        {},
+        { headers: this.getHeaders() }
+      )
+      .pipe(catchError(this.handleError));
   }
 
-  // Search users (add search endpoint to backend if needed)
-  searchUsers(query: string): Observable<User[]> {
-    const params = new HttpParams().set('query', query);
-    return this.http.get<User[]>(`${this.apiUrl}/search`, { params }).pipe(catchError(this.handleError));
+  // ลบเพื่อนออกจากรายชื่อ (ถ้า vibe เปลี่ยน ก็จัดการให้เรียบร้อย)
+  removeFriend(userId: string): Observable<string> {
+    return this.http
+      .delete<string>(`${this.apiUrl}/remove/${userId}`, {
+        headers: this.getHeaders(),
+      })
+      .pipe(catchError(this.handleError));
+  }
+
+  cancelFriendRequest(userId: string): Observable<string> {
+    return this.http
+      .delete<string>(`${this.apiUrl}/cancel/${userId}`, {
+        headers: this.getHeaders(),
+      })
+      .pipe(catchError(this.handleError));
+  }
+  declineFriendRequest(requestId: string): Observable<string> {
+    return this.http
+      .delete<string>(`${this.apiUrl}/decline/${requestId}`, {
+        headers: this.getHeaders(),
+      })
+      .pipe(catchError(this.handleError));
   }
 }

@@ -1,0 +1,13 @@
+<div class="p-4">
+    <h2 class="text-xl font-bold mb-4">Chat Room</h2>
+    <div class="border p-4 h-64 overflow-y-auto">
+      <div *ngFor="let msg of messages">
+        <p><strong>{{ msg.senderId }}:</strong> {{ msg.content }}</p>
+      </div>
+    </div>
+    <div class="mt-4 flex">
+      <input [(ngModel)]="newMessage" type="text" placeholder="Type a message..." class="border p-2 flex-1">
+      <button (click)="sendMessage()" class="ml-2 px-4 py-2 bg-blue-500 text-white">Send</button>
+    </div>
+  </div>
+  

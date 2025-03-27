@@ -1,19 +1,70 @@
-<header>
-  <nav class="navbar">
-    <a routerLink="/" class="nav-link">Home</a>
-    <ng-container *ngIf="isLoggedIn$ | async; else authLinks">
-      <a routerLink="/friends" class="nav-link">Friends</a>
-      <button (click)="logout()" class="btn btn-logout">Logout</button>
-    </ng-container>
-    <ng-template #authLinks>
-      <a routerLink="/login" class="nav-link">Login</a>
-      <a routerLink="/register" class="nav-link">Register</a>
-    </ng-template>
-  </nav>
-  <!-- <div *ngIf="loggedInUsername" class="text-gray-500">
-    <p>Logged in as: <strong>{{ loggedInUsername }}</strong></p>
-  </div> -->
+<header *ngIf="isLoggedIn$ | async" class="bg-white shadow-md">
+  <div class="container mx-auto flex items-center justify-between p-4">
+    <!-- Logo/Brand -->
+    <a
+      routerLink="/"
+      class="text-2xl font-bold text-blue-600 hover:text-blue-700"
+    >
+      testbook
+    </a>
+
+    <!-- Navigation Links -->
+    <nav class="flex items-center space-x-6">
+      <ng-container *ngIf="isLoggedIn$ | async; else authLinks">
+        <!-- Profile Picture -->
+        <div
+          *ngIf="user"
+          class="w-10 h-10 rounded-full overflow-hidden border-4 border-gray-300 dark:border-gray-600"
+        >
+          <!-- <img
+            *ngIf="user.profilePicture; else noImage"
+            [src]="user.profilePicture"
+            alt="Profile Picture"
+            class="w-full h-full object-cover"
+          /> -->
+          <app-profile-picture
+          [profileUrl]="user.profilePicture ?? null"
+          [username]="user.username || 'Unknown User'"
+          [size]="''"
+        >
+        </app-profile-picture>
+          <ng-template #noImage>
+            <div
+              class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+            >
+              <span class="text-gray-600 dark:text-gray-400 text-lg"
+                >No Image</span
+              >
+            </div>
+          </ng-template>
+        </div>
+        <a
+          [routerLink]="['/profile', (userProfile$ | async)?.username]"
+          class="text-gray-700 hover:text-blue-600"
+          >Profile</a
+        >
+        <a routerLink="/friends" class="text-gray-700 hover:text-blue-600"
+          >Friends</a
+        >
+        <button
+          (click)="logout()"
+          class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+        >
+          Logout
+        </button>
+      </ng-container>
+      <ng-template #authLinks>
+        <a routerLink="/login" class="text-gray-700 hover:text-blue-600"
+          >Login</a
+        >
+        <a routerLink="/register" class="text-gray-700 hover:text-blue-600"
+          >Register</a
+        >
+      </ng-template>
+    </nav>
+  </div>
 </header>
+
 <main>
   <router-outlet></router-outlet>
 </main>

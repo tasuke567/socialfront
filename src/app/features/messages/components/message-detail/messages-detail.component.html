@@ -1,0 +1,53 @@
+<div class="flex flex-col h-full max-w-lg mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+  <!-- Header -->
+  <header class="bg-blue-500 text-white text-lg font-semibold p-4 text-center">
+    Chat
+  </header>
+
+  <!-- Chat Messages -->
+  <section class="chat-messages flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
+    <ng-container *ngFor="let message of messages">
+      <!-- ป้องกันฟองเปล่า -->
+      <div
+        *ngIf="message && message.content && message.content.trim()"
+        [ngClass]="{
+          'ml-auto bg-blue-500 text-white': message.senderId === userId,
+          'mr-auto bg-gray-300 text-gray-800': message.senderId !== userId
+        }"
+        class="max-w-xs p-3 rounded-lg shadow-md"
+      >
+        <!-- Username -->
+        <div
+          class="text-xs"
+          [ngClass]="{
+            'text-gray-200': message.senderId === userId,
+            'text-gray-600': message.senderId !== userId
+          }"
+        >
+          {{ message.username }}
+        </div>
+
+        <!-- Content -->
+        <p class="text-sm">
+          {{ message.content }}
+        </p>
+      </div>
+    </ng-container>
+  </section>
+
+  <!-- Input Section -->
+  <footer class="bg-white p-4 flex items-center border-t">
+    <input
+      type="text"
+      class="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+      [(ngModel)]="newMessage"
+      placeholder="Type a message..."
+    />
+    <button
+      class="ml-2 bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition"
+      (click)="sendMessage()"
+    >
+      Send
+    </button>
+  </footer>
+</div>

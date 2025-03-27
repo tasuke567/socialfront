@@ -1,0 +1,57 @@
+<div class="fixed inset-0 flex items-center justify-center z-50 bg-gray-900 bg-opacity-50">
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md relative">
+    <button 
+      type="button" 
+      class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
+      (click)="cancel.emit()">
+      &times;
+    </button>
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+      Select Your Interests
+    </h2>
+    <form [formGroup]="interestForm" (ngSubmit)="onSubmit()">
+      <div class="mb-6">
+        <p class="text-sm text-gray-600 mb-4">
+          Choose at least 3 interests to personalize your experience
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+          <div *ngFor="let interest of interests" class="flex items-center">
+            <input 
+              type="checkbox" 
+              [id]="interest"
+              [value]="interest"
+              (change)="onCheckboxChange(interest, $event)"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            >
+            <label [for]="interest" class="ml-2 text-sm text-gray-700">
+              {{ interest }}
+            </label>
+          </div>
+        </div>
+        <div *ngIf="interestForm.get('selectedInterests')?.errors?.['required'] && interestForm.get('selectedInterests')?.touched" 
+             class="text-red-500 text-sm mt-2">
+          Please select at least 3 interests
+        </div>
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button
+          type="button"
+          (click)="cancel.emit()"
+          class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+          Skip
+        </button>
+        <button
+          type="submit"
+          [disabled]="interestForm.invalid || isLoading"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">
+          <span *ngIf="!isLoading">Save Interests</span>
+          <span *ngIf="isLoading">Saving...</span>
+        </button>
+      </div>
+      <div *ngIf="errorMessage" 
+           class="p-3 mt-4 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm text-center">
+        {{ errorMessage }}
+      </div>
+    </form>
+  </div>
+</div>

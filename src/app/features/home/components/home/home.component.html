@@ -1,12 +1,20 @@
-<!-- Conditionally display based on login status -->
-<div *ngIf="!isLoggedIn" class="flex flex-col items-center justify-center h-screen bg-gray-50">
+<!--
+  🔹 กรณีผู้ใช้ยังไม่ได้ล็อกอิน (Guest View)
+  แสดงข้อความต้อนรับและปุ่ม "Get Started" เพื่อให้ผู้ใช้เข้าสู่หน้าล็อกอิน
+-->
+<div
+  *ngIf="!isLoggedIn"
+  class="flex flex-col items-center justify-center h-screen bg-gray-50 px-6"
+>
   <div class="text-center max-w-xl">
-    <h1 class="text-4xl font-bold text-gray-800">Welcome to Our Social Network!</h1>
+    <h1 class="text-5xl font-extrabold text-gray-800">
+      Welcome to Our Social Network!
+    </h1>
     <p class="mt-4 text-lg text-gray-600">
-      Connecting the world, one friend at a time.
+      Connect with friends, share your thoughts, and explore new communities.
     </p>
     <button
-      class="mt-8 px-6 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+      class="mt-8 px-6 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-400"
       (click)="navigateToLogin()"
     >
       Get Started
@@ -14,5 +22,56 @@
   </div>
 </div>
 
-<!-- Show PostsComponent only if logged in -->
-<app-posts *ngIf="isLoggedIn"></app-posts>
+<!--
+  🔹 กรณีผู้ใช้ล็อกอินแล้ว (Authenticated User View)
+  แสดง Home Feed ซึ่งประกอบด้วย:
+    - หัวข้อ Feed
+    - ฟอร์มสร้างโพสต์
+    - สถานะ Loading (ถ้ากำลังโหลด)
+    - ข้อความแจ้งว่าไม่มีโพสต์ (ถ้าไม่มีข้อมูล)
+    - รายการโพสต์
+-->
+<div *ngIf="isLoggedIn" class="container mx-auto px-4 py-8">
+  <!-- 📝 ฟอร์มสร้างโพสต์ -->
+  <app-post-form
+    [currentUserProfileUrl]="currentUserProfileUrl"
+    [currentUser]="currentUser"
+    [isLoading]="isLoading"
+    (onPost)="createPost($event)"
+  ></app-post-form>
+
+  <!-- ⏳ สถานะกำลังโหลดโพสต์ -->
+  <div *ngIf="isLoading" class="text-center text-gray-500 py-4 animate-pulse">
+    Loading posts...
+  </div>
+
+  <!-- 🚫 ข้อความแจ้งไม่มีโพสต์ -->
+  <div
+    *ngIf="!isLoading && posts.length === 0"
+    class="text-center text-gray-500 py-4"
+  >
+    <p>No posts found. Start the conversation!</p>
+  </div>
+
+  <!-- 📜 รายการโพสต์ -->
+  <div class="posts-container space-y-6">
+    <app-posts
+      *ngFor="let post of posts"
+      [post]="post"
+      (onLike)="toggleLike($event)"
+      (onComment)="toggleCommentSection($event)"
+      (onShare)="sharePost($event)"
+      (onCommentSubmit)="commentOnPost($event.postId, $event.commentText)"
+    ></app-posts>
+  </div>
+</div>
+<app-interest-form
+  *ngIf="showInterestForm"
+  (submitInterest)="handleInterestSubmit($event)"
+  (cancel)="closeInterestForm()"
+>
+</app-interest-form>
+
+<div *ngIf="errorMessage" class="p-4 mb-4 text-red-700 bg-red-100 rounded">
+  {{ errorMessage }}
+</div>

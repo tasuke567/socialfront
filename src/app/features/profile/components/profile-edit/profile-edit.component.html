@@ -1,0 +1,102 @@
+<div class="container mx-auto p-4 max-w-2xl">
+    <div class="bg-white shadow-lg rounded-lg p-6 dark:bg-gray-900">
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-6">Edit Profile</h2>
+  
+      <form *ngIf="editForm" [formGroup]="editForm" (ngSubmit)="onSubmit()">
+        <!-- Error Message -->
+        <div
+          *ngIf="errorMessage"
+          class="bg-red-50 border border-red-300 text-red-700 p-4 rounded-lg mb-4 dark:bg-red-800 dark:text-red-200"
+        >
+          {{ errorMessage }}
+        </div>
+  
+        <!-- Profile Picture Upload -->
+        <div class="flex flex-col items-center">
+          <label class="cursor-pointer">
+            <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-gray-300 dark:border-gray-600">
+              <img
+                *ngIf="editForm.get('profilePicture')?.value; else noImage"
+                [src]="editForm.get('profilePicture')?.value"
+                alt="Profile Picture"
+                class="w-full h-full object-cover"
+              />
+              <ng-template #noImage>
+                <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  <span class="text-gray-600 dark:text-gray-400 text-lg">No Image</span>
+                </div>
+              </ng-template>
+            </div>
+            <input
+              type="file"
+              accept="image/png, image/jpeg"
+              class="hidden"
+              (change)="onFileSelected($event)"
+              aria-label="Upload profile picture"
+            />
+          </label>
+        </div>
+  
+        <!-- Form Fields -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+          <div>
+            <label class="block text-gray-700 dark:text-gray-300 font-medium mb-2">First Name</label>
+            <input
+              type="text"
+              formControlName="firstName"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            />
+            <span
+              *ngIf="editForm.get('firstName')?.invalid && editForm.get('firstName')?.touched"
+              class="text-red-500 text-sm"
+              >First name is required</span
+            >
+          </div>
+  
+          <div>
+            <label class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Last Name</label>
+            <input
+              type="text"
+              formControlName="lastName"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            />
+            <span
+              *ngIf="editForm.get('lastName')?.invalid && editForm.get('lastName')?.touched"
+              class="text-red-500 text-sm"
+              >Last name is required</span
+            >
+          </div>
+        </div>
+  
+        <div class="mt-4">
+          <label class="block text-gray-700 dark:text-gray-300 font-medium mb-2">Username</label>
+          <input
+            type="text"
+            formControlName="username"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-300"
+            [readonly]="true"
+          />
+        </div>
+  
+        <!-- Form Actions -->
+        <div class="mt-8 flex justify-end space-x-4">
+          <button
+            type="button"
+            (click)="router.navigate(['/profile', user.username])"
+            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="editForm.invalid || isLoading"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 flex items-center transition-all"
+          >
+            <span *ngIf="isLoading" class="animate-spin mr-2">↻</span>
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
